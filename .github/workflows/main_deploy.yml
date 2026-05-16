@@ -1,0 +1,43 @@
+name: Deploy Innovatech Stack
+
+on:
+  push:
+    branches: [ deploy ] # Se activa solo cuando subes cambios a la rama deploy
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      # 1. Configurar conexión con AWS
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      # 2. Construir las imágenes Docker
+      - name: Build Docker Images
+        run: |
+          docker build -t frontend-img ./front_despacho
+          docker build -t ventas-img ./back-Ventas_SpringBoot/Springboot-API-REST
+          docker build -t despachos-img ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+
+      # 3. Entrar a tu EC2 y desplegar 
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_FRONT }} # La IP de tu instancia
+          username: ec2-user
+          key: ${{ secrets.SSH_PRIVATE_KEY }} # Tu archivo .pem
+          script: |
+            mkdir -p ~/innovatech-proyecto
+            cd ~/innovatech-proyecto
+            # Aquí el pipeline limpia lo viejo y levanta lo nuevo
+            # (Asumiendo que tienes un docker-compose.yml en la raíz)
+            docker-compose down || true
+            docker-compose up -d --build
