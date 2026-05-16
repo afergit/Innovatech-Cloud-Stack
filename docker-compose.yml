@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  front-despacho:
+    build: ./front_despacho
+    ports:
+      - "80:80"
+    networks:
+      - innovatech-net
+    depends_on:
+      - back-ventas
+      - back-despachos
+
+  back-ventas:
+    build: ./back-Ventas_SpringBoot/Springboot-API-REST
+    environment:
+      - DB_URL=jdbc:postgresql://db-ventas:5432/ventasdb
+    networks:
+      - innovatech-net
+
+  back-despachos:
+    build: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+    networks:
+      - innovatech-net
+
+  # Ejemplo de base de datos para la persistencia (IE3)
+  db-ventas:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=ventasdb
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ventas-data:/var/lib/postgresql/data # Persistencia (Named Volume)
+    networks:
+      - innovatech-net
+
+networks:
+  innovatech-net:
+    driver: bridge
+
+volumes:
+  ventas-data: # Este volumen asegura que los datos no se pierdan al reiniciar (IE3)
