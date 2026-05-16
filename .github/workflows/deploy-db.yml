@@ -20,9 +20,19 @@ jobs:
           username: ec2-user
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p ~/innovatech_stack
+            # 1. Asegurar Git
+            sudo dnf install git -y || sudo apt-get install git -y
+            
+            # 2. Clonar si no existe, o actualizar si existe
+            if [ ! -d "~/innovatech_stack" ]; then
+              git clone https://github.com/afergit/Innovatech-Cloud-Stack.git ~/innovatech_stack
+            fi
+            
             cd ~/innovatech_stack
-            # git pull origin deploy
+            git checkout deploy
+            git pull origin deploy
+            
+            # 3. Levantar DB
             cd db
             sudo docker-compose down || true
             sudo docker-compose up -d
