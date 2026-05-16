@@ -1,4 +1,4 @@
-name: Deploy Backend Service
+name: Deploy Backend Service (ECR + SSM)
 
 on:
   push:
@@ -8,35 +8,59 @@ on:
       - 'back-Despachos_SpringBoot/**'
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del código
         uses: actions/checkout@v3
 
-      - name: Deploy to Backend EC2
-        uses: appleboy/ssh-action@master
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.EC2_HOST_BACK }}
-          username: ec2-user
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            # 1. Asegurar Git y Compatibilidad de Docker
-            sudo dnf install git -y || sudo apt-get install git -y
-            # Crear enlace simbólico por si se requiere 'docker-compose' con guion
-            sudo ln -s /usr/libexec/docker/cli-plugins/docker-compose /usr/bin/docker-compose 2>/dev/null || true
-            
-            # 2. Clonar si no existe, o actualizar si existe
-            if [ ! -d "~/innovatech_stack" ]; then
-              git clone https://github.com/afergit/Innovatech-Cloud-Stack.git ~/innovatech_stack
-            fi
-            
-            cd ~/innovatech_stack
-            git checkout deploy
-            git pull origin deploy
-            
-            # 3. Levantar servicios (Uso de 'docker compose' moderno)
-            export DB_HOST=${{ secrets.EC2_HOST_DB }}
-            cd back-Ventas_SpringBoot
-            sudo -E docker compose down || true
-            sudo -E docker compose up --build -d
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login en Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and Push Backend Images
+        run: |
+          # Construir y subir imagen de Ventas
+          docker build -t innovatech-back-ventas ./back-Ventas_SpringBoot/Springboot-API-REST
+          docker tag innovatech-back-ventas:latest ${{ secrets.ECR_REGISTRY }}/innovatech-back-ventas:latest
+          docker push ${{ secrets.ECR_REGISTRY }}/innovatech-back-ventas:latest
+          
+          # Construir y subir imagen de Despachos
+          docker build -t innovatech-back-despachos ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+          docker tag innovatech-back-despachos:latest ${{ secrets.ECR_REGISTRY }}/innovatech-back-despachos:latest
+          docker push ${{ secrets.ECR_REGISTRY }}/innovatech-back-despachos:latest
+
+  deploy-via-ssm:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Mandar comando de despliegue vía SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids ${{ secrets.EC2_BACKEND_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --comment "Actualizar microservicios desde ECR" \
+            --parameters '{"commands":[
+              "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
+              "sudo docker pull ${{ secrets.ECR_REGISTRY }}/innovatech-back-ventas:latest",
+              "sudo docker pull ${{ secrets.ECR_REGISTRY }}/innovatech-back-despachos:latest",
+              "sudo docker stop back-ventas back-despachos || true",
+              "sudo docker rm back-ventas back-despachos || true",
+              "sudo docker run -d --name back-ventas -p 8080:8080 -e DB_HOST=${{ secrets.EC2_HOST_DB }} ${{ secrets.ECR_REGISTRY }}/innovatech-back-ventas:latest",
+              "sudo docker run -d --name back-despachos -p 8081:8081 -e DB_HOST=${{ secrets.EC2_HOST_DB }} ${{ secrets.ECR_REGISTRY }}/innovatech-back-despachos:latest"
+            ]}'
