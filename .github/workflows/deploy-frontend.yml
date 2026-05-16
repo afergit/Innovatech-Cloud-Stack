@@ -32,8 +32,8 @@ jobs:
             git checkout deploy
             git pull origin deploy
             
-            # 3. Levantar servicios con variables de entorno
+            # 3. Levantar servicios con variables de entorno (Uso de 'docker compose' sin guion)
             export BACKEND_HOST=${{ secrets.EC2_HOST_BACK }}
             cd front_despacho
-            sudo -E docker-compose down || true
-            sudo -E docker-compose up --build -d
+            sudo -E docker compose down || true
+            sudo -E docker compose up --build -d
