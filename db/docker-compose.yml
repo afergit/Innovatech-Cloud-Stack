@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  db-ventas:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=ventasdb
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=springuser
+      - MYSQL_PASSWORD=springpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - ventas-data:/var/lib/mysql
+    networks:
+      - db-net
+
+networks:
+  db-net:
+    driver: bridge
+
+volumes:
+  ventas-data:

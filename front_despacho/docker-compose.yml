@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  front-despacho:
+    build: .
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL_VENTAS=http://${BACKEND_HOST}:8080
+      - VITE_API_URL_DESPACHOS=http://${BACKEND_HOST}:8081

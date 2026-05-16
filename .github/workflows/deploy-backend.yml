@@ -1,0 +1,29 @@
+name: Deploy Backend Service
+
+on:
+  push:
+    branches: [ deploy ]
+    paths:
+      - 'back-Ventas_SpringBoot/**'
+      - 'back-Despachos_SpringBoot/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Deploy to Backend EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_BACK }}
+          username: ec2-user
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p ~/innovatech_stack
+            cd ~/innovatech_stack
+            # git pull origin deploy
+            cd back-Ventas_SpringBoot
+            sudo docker-compose down || true
+            sudo docker-compose up --build -d

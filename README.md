@@ -10,33 +10,24 @@ Proyecto semestral enfocado en una arquitectura de microservicios, contenedoriza
 - **Infraestructura:** Docker, Docker Compose.
 - **Cloud & DevOps:** AWS, GitHub Actions (CI/CD), GitHub Security.
 
-## 📂 Estructura del Proyecto
+## 📂 Estructura del Proyecto (Clean Tier Architecture)
 
-- `back-Ventas_SpringBoot/`: Microservicio de gestión de ventas.
-- `back-Despachos_SpringBoot/`: Microservicio de gestión de despachos.
-- `front_despacho/`: Aplicación cliente en React.
-- `docker-compose.yml`: Orquestación de contenedores para desarrollo local.
+Siguiendo el flujo de mejores prácticas (estilo `tienda_perritos`), el proyecto se organiza en carpetas independientes con sus propios archivos de orquestación:
 
-## 🚀 Ejecución Local
+- **`front_despacho/`**: Contiene la App React y su `docker-compose.yml` para despliegue en la instancia Frontend.
+- **`back-Ventas_SpringBoot/`**: Contiene la lógica de microservicios y el `docker-compose.yml` para despliegue en la instancia Backend.
+- **`db/`**: Contiene el `docker-compose.yml` para la instancia de Base de Datos.
 
-Para levantar todo el ecosistema de microservicios localmente, asegúrate de tener Docker instalado y ejecuta:
+## 🚀 Despliegue y DevOps
 
-```bash
-docker-compose up --build
-```
+Este proyecto utiliza un pipeline de **GitHub Actions** (`main_deploy.yml`) para automatizar el despliegue multi-objetivo:
+1. **Instancia Backend**: Se actualizan los microservicios y se conectan a la base de datos.
+2. **Instancia Frontend**: Se actualiza la interfaz de usuario una vez que el backend está listo.
 
-Esto levantará:
-- **Frontend**: Accedible en `http://localhost:80`
-- **API Ventas**: Microservicio de backend.
-- **API Despachos**: Microservicio de backend.
-- **Base de Datos**: PostgreSQL para persistencia de datos.
-
-## ☁️ Despliegue y DevOps
-
-Este proyecto está diseñado para implementarse en **AWS Student** siguiendo prácticas modernas de DevOps:
-- **CI/CD**: Flujos de automatización mediante GitHub Actions para construcción y despliegue.
-- **Security**: Implementación de escaneo de vulnerabilidades y manejo de secretos.
-- **Infraestructura**: Uso de contenedores Docker para garantizar la paridad entre entornos.
+### Secretos Necesarios en GitHub:
+- `EC2_HOST_FRONT`: IP de la instancia de Frontend.
+- `EC2_HOST_BACK`: IP de la instancia de Backend.
+- `SSH_PRIVATE_KEY`: Llave para acceso seguro a las instancias.
 
 ---
 *Desarrollado para el Proyecto Semestral ISY1101.*
