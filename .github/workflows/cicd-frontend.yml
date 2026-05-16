@@ -1,4 +1,4 @@
-name: Deploy Frontend Service (ECR + SSM)
+name: CI/CD Innovatech - Frontend
 
 on:
   push:

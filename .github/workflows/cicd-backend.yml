@@ -1,4 +1,4 @@
-name: Deploy Backend Service (ECR + SSM)
+name: CI/CD Innovatech - Backend
 
 on:
   push:

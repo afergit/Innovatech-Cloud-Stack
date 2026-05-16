@@ -1,4 +1,4 @@
-name: Deploy DB Service (ECR + SSM)
+name: CI/CD Innovatech - DB
 
 on:
   push:
