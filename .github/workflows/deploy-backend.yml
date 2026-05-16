@@ -21,8 +21,10 @@ jobs:
           username: ec2-user
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Asegurar Git
+            # 1. Asegurar Git y Compatibilidad de Docker
             sudo dnf install git -y || sudo apt-get install git -y
+            # Crear enlace simbólico por si se requiere 'docker-compose' con guion
+            sudo ln -s /usr/libexec/docker/cli-plugins/docker-compose /usr/bin/docker-compose 2>/dev/null || true
             
             # 2. Clonar si no existe, o actualizar si existe
             if [ ! -d "~/innovatech_stack" ]; then
@@ -33,7 +35,7 @@ jobs:
             git checkout deploy
             git pull origin deploy
             
-            # 3. Levantar servicios con variables de entorno (Uso de 'docker compose' sin guion)
+            # 3. Levantar servicios (Uso de 'docker compose' moderno)
             export DB_HOST=${{ secrets.EC2_HOST_DB }}
             cd back-Ventas_SpringBoot
             sudo -E docker compose down || true
