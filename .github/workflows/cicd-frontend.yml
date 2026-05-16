@@ -3,8 +3,7 @@ name: CI/CD Innovatech - Frontend
 on:
   push:
     branches: [ deploy ]
-    paths:
-      - 'front_despacho/**'
+    # Se eliminó el filtro de paths temporalmente para forzar la primera ejecución
 
 jobs:
   build-and-push:

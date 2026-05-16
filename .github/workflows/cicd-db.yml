@@ -3,8 +3,7 @@ name: CI/CD Innovatech - DB
 on:
   push:
     branches: [ deploy ]
-    paths:
-      - 'db/**'
+    # Se eliminó el filtro de paths temporalmente para forzar la primera ejecución
 
 jobs:
   build-and-push:

@@ -3,9 +3,7 @@ name: CI/CD Innovatech - Backend
 on:
   push:
     branches: [ deploy ]
-    paths:
-      - 'back-Ventas_SpringBoot/**'
-      - 'back-Despachos_SpringBoot/**'
+    # Se eliminó el filtro de paths temporalmente para forzar la primera ejecución
 
 jobs:
   build-and-push:
