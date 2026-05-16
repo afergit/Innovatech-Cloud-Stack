@@ -27,12 +27,10 @@ jobs:
 
       - name: Build and Push Backend Images
         run: |
-          # Construir y subir imagen de Ventas
           docker build -t innovatech-back-ventas ./back-Ventas_SpringBoot/Springboot-API-REST
           docker tag innovatech-back-ventas:latest ${{ secrets.ECR_REGISTRY }}/innovatech-back-ventas:latest
           docker push ${{ secrets.ECR_REGISTRY }}/innovatech-back-ventas:latest
           
-          # Construir y subir imagen de Despachos
           docker build -t innovatech-back-despachos ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
           docker tag innovatech-back-despachos:latest ${{ secrets.ECR_REGISTRY }}/innovatech-back-despachos:latest
           docker push ${{ secrets.ECR_REGISTRY }}/innovatech-back-despachos:latest
